@@ -85,6 +85,7 @@ function getTwitterMp4URL(tweetID, callback) {
         id: tweetID,
         tweet_mode: 'extended' // Importante para obter a URL do vídeo
     }, function (error, tweet, event) {
+        if (tweet[0] === undefined) return; // Tweet não é um reply
         if (tweet[0].extended_entities === undefined) return; // Tweet sem mídia
         if (tweet[0].extended_entities.media[0].video_info === undefined) return; // Tweet sem video
         const mediaURL = tweet[0].extended_entities.media[0].video_info.variants[0].url;
