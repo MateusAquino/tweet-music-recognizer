@@ -1,8 +1,11 @@
 # tweet-music-recognizer
-Node.js Bot to identify songs in Twitter videos!  
-Audio Recognition provided by [ACRCloud](https://www.acrcloud.com/).
+![CI](https://github.com/MateusAquino/tweet-music-recognizer/workflows/CI/badge.svg) ![Heroku](https://heroku-badge.herokuapp.com/?app=tweet-music-recognizer)  
 
-## Setup
+Node.js Bot to identify songs in Twitter videos!  
+Audio Recognition provided by [ACRCloud](https://www.acrcloud.com/).  
+Mention [@nomemusica](https://twitter.com/nomemusica) (pt-BR) to a music video for a live preview.
+
+## 🚀 Setup
 To run this bot you'll need to insert some tokens inside the `.env` file.
 
 ### ACRCloud API
@@ -15,7 +18,7 @@ You'll need to create a Google API Project for that (don't worry, it's free). Af
 ### Twitter API
 If you don't have your own Twitter App yet, I suggest creating it directly into your bot account, as **all four tokens** will be easily found in your [Apps page](https://developer.twitter.com/en/apps/). However, if you already have one, grab your `Consumer API Key` and `Consumer API Secret`, add them to your `.env` file, also use them with [Twurl](https://developer.twitter.com/en/docs/tutorials/using-twurl) to generate your `Access Token Key` and `Access Token Secret` for other accounts (they'll be saved in `~/.twurlrc`).
 
-## Run
+## ✨ Run
 You can upload this project to Heroku if you want, but to test it in your own machine, simply execute:
 
 ```bash
@@ -23,6 +26,6 @@ npm install #once only
 npm start
 ```
 
-## License
+## 📜 License
 
 [MIT](./LICENSE) &copy; [Mateus Aquino](https://www.linkedin.com/in/mateusaquino/)
