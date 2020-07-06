@@ -18,8 +18,10 @@ If you don't have your own Twitter App yet, I suggest creating it directly into 
 ## Run
 You can upload this project to Heroku if you want, but to test it in your own machine, simply execute:
 
-    npm install # once only
-    npm app
+```bash
+npm install #once only
+npm start
+```
 
 ## License
 
