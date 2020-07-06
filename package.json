@@ -1,6 +1,6 @@
 {
   "name": "tweet-music-recognizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bot para identificar músicas de tweets",
   "main": "app.js",
   "dependencies": {

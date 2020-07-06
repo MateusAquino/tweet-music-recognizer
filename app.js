@@ -66,8 +66,8 @@ async function replyWithSong(tweetID, postData) {
                     return;
                 }
                 for (s of song[0].artists)
-                    songName += s.name + " ,";
-                songName = songName.slice(0, -1) + '- ' + song[0].title;
+                    songName += s.name + ", ";
+                songName = songName.slice(0, -2) + ' - ' + song[0].title;
                 task.output = ('Searching for', songName);
                 youtubeSearch(songName, search => { // Era opcional, mas por estética optei por mandar um card do youtube
                     task.title = search;
