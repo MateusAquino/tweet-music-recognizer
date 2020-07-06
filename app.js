@@ -22,6 +22,10 @@ app.listen(server_port, server_host, function () {
     console.log("Application: online.");
 });
 
+app.get('/', (req, res) => {
+    res.send('This application is online.');
+});
+
 // Primeira função a ser executada
 function setupTwitter() {
     cliente.stream('statuses/filter', {
