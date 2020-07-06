@@ -25,7 +25,3 @@ jobs:
     # Runs a single command using the runners shell
     - name: Install dependencies
       run: npm install
-
-    # Runs a set of commands using the runners shell
-    - name: Run script
-      run:  npm start
