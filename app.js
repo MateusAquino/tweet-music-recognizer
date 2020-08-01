@@ -45,7 +45,7 @@ function setupTwitter() {
         });
 
         stream.on('error', function (error) {
-            throw error;
+            console.log('Error: failed to link stream listener to Twitter.');
         });
     });
 }
@@ -62,17 +62,17 @@ async function replyWithSong(tweetID, postData) {
                 if (song === "404") {
                     task.title = "Fingerprint failed!";
                     postData[1].status += `Não consegui identificar a música :(`;
-                    cliente.post(...postData, () => reject(`ACRCloud could not detect song for TwID: ${tweetID}!`));
+                    cliente.post(...postData, () => reject(`ACRCloud could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
                     return;
                 }
                 for (s of song[0].artists)
                     songName += s.name + ", ";
-                songName = songName.slice(0, -2) + ' - ' + song[0].title;
+                songName = songName.slice(0, -2) + ' - ' + song[0].title; // Resultado Final: "Artist1, Artist2, ... - Song Name"
                 task.output = ('Searching for', songName);
                 youtubeSearch(songName, search => { // Era opcional, mas por estética optei por mandar um card do youtube
                     task.title = search;
-                    postData[1].status += `${songName} https://youtu.be/${search}`;
-                    cliente.post(...postData, resolve);
+                    postData[1].status += `${songName} https://youtu.be/${search}`; // Add o card do youtube no tweet
+                    cliente.post(...postData, resolve); // Envia tweet
                 });
             });
         });
