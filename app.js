@@ -62,7 +62,8 @@ async function replyWithSong(tweetID, postData) {
                 if (song === "404") {
                     task.title = "Fingerprint failed!";
                     postData[1].status += `Não consegui identificar a música :(`;
-                    cliente.post(...postData, () => reject(`ACRCloud could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
+                    cliente.post(...postData, () => reject(`ACRCloud could not detect song for TwID: ${tweetID}!`))
+                           .catch(err => { console.log('Error:', err.message); }); // Envia tweet + log console
                     return;
                 }
                 for (s of song[0].artists)
