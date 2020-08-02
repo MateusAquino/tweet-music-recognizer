@@ -2,7 +2,6 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const listr = require('listr');
 const app = require('./config/server.js');
 const cliente = require('./config/twitter.js');
 const searchYoutube = require('youtube-api-v3-search');
@@ -29,9 +28,8 @@ app.get('/', (req, res) => {
 // Primeira função a ser executada
 function setupTwitter() {
     cliente.stream('statuses/filter', {
-        track: '@nomemusica'
+        track: '@nomemusica' // Quando alguem fizer uma @mention
     }, function (stream) {
-        // Quando alguem fizer uma @mention
         stream.on('data', function (event) {
             const parentTweet = event.in_reply_to_status_id_str;
             const childTweet = event.id_str;
@@ -46,34 +44,36 @@ function setupTwitter() {
 
         stream.on('error', function (error) {
             console.log('Error: failed to link stream listener to Twitter.');
+            console.log(error);
         });
     });
 }
 
 // Responde o tweet (tweetID) com a musica que será encontrada
 async function replyWithSong(tweetID, postData) {
+    const hash = (Math.random().toString(36)+'00000000000000000').slice(2, 7); // Gera Hash aleatório de 5 caracteres
+
     await getTwitterMp4URL(tweetID, url => {
-        downloadTempMp4File(url, (resolve, task, reject) => {
-            const acr = setupACR();            // ACR = API para identificar fingerprints de audios e
-            task.title = 'Identifying song...' // obter os dados da música (nome, artista, ...)
-            task.output = '';
-            identifyTempMp4(acr, song => {
+        downloadTempMp4File(url, hash, () => {
+            const acr = require('./config/acr.js');  // ACR = API para identificar fingerprints de audios e
+            console.log('Identifying song...');      // obter os dados da música (nome, artista, ...)
+            identifyTempMp4(acr, hash, song => {
+                fs.unlink(`./tempVideos/${hash}.mp4`, (err) => { if (err) console.error(err); });
                 let songName = "";
                 if (song === "404") {
-                    task.title = "Fingerprint failed!";
+                    console.log("Fingerprint failed!");
                     postData[1].status += `Não consegui identificar a música :(`;
-                    cliente.post(...postData, () => reject(`ACRCloud could not detect song for TwID: ${tweetID}!`))
-                           .catch(err => { console.log('Error:', err.message); }); // Envia tweet + log console
+                    cliente.post(...postData, () => console.log(`ACRCloud could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
                     return;
                 }
                 for (s of song[0].artists)
                     songName += s.name + ", ";
                 songName = songName.slice(0, -2) + ' - ' + song[0].title; // Resultado Final: "Artist1, Artist2, ... - Song Name"
-                task.output = ('Searching for', songName);
-                youtubeSearch(songName, search => { // Era opcional, mas por estética optei por mandar um card do youtube
-                    task.title = search;
+                console.log(`Searching yt ID for: '${songName}'`);
+                youtubeSearch(songName, search => {                       // Era opcional, mas por estética optei por mandar um card do youtube
+                    console.log(`Found: '${search}'`);
                     postData[1].status += `${songName} https://youtu.be/${search}`; // Add o card do youtube no tweet
-                    cliente.post(...postData, resolve); // Envia tweet
+                    cliente.post(...postData, () => console.log('Tweet sent!'));    // Envia tweet
                 });
             });
         });
@@ -95,55 +95,33 @@ function getTwitterMp4URL(tweetID, callback) {
 }
 
 // Baixa um .mp4 da Web para o arquivo ./temp.mp4
-function downloadTempMp4File(url, callback) {
-    function one(tasks) {
-        tasks.run();
-    }
-    if (process.argv) {
-        const tasks = [{
-            title: 'Downloading',
-            output: url,
-            task: async (ctx, task) => {
-                const tempFile = path.resolve(__dirname, 'temp.mp4')
-                const response = await axios({
-                    url,
-                    method: 'GET',
-                    responseType: 'stream'
-                })
-                response.data.pipe(fs.createWriteStream(tempFile))
-                return new Promise((resolve, reject) => {
-                    response.data.on('end', () => {
-                        callback(resolve, task, reject);
-                    })
-                    response.data.on('error', err => {
-                        reject(err)
-                    })
-                })
-            }
-        }]
-        one(new listr(tasks));
-    }
-}
-
-function setupACR() {
-    const acrcloud = require('acrcloud');
-    const acr = new acrcloud({
-        host: process.env.acr_host,
-        access_key: process.env.acr_access_key,
-        access_secret: process.env.acr_access_secret
-    });
-    return acr;
+async function downloadTempMp4File(url, hash, callback) {
+    const tempFile = path.resolve(__dirname, 'tempVideos', `${hash}.mp4`)
+    const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream'
+    })
+    response.data.pipe(fs.createWriteStream(tempFile));
+    return new Promise(() => {
+        response.data.on('end', () => {
+            callback();
+        })
+        response.data.on('error', () => {
+            console.log('Failed to download source.');
+        })
+    })
 }
 
 // Utiliza o ACR para identificar a música do arquivo ./temp.mp4
-function identifyTempMp4(acr, callback) {
+function identifyTempMp4(acr, hash, callback) {
     const fs = require("fs");
-    const sample = fs.readFileSync("./temp.mp4");
+    const sample = fs.readFileSync(`./tempVideos/${hash}.mp4`);
 
-    acr.identify(sample).then(metadata => {
+    acr(api => api.identify(sample).then(metadata => {
         const statusMsg = metadata.status.msg;
         callback(statusMsg === 'Success' ? metadata['metadata']['music'] : '404');
-    });
+    }));
 }
 
 // Obtem o id do vídeo do youtube pela pesquisa "Artista - Música"
