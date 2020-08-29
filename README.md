@@ -1,4 +1,4 @@
-# tweet-music-recognizer ![CI](https://github.com/MateusAquino/tweet-music-recognizer/workflows/CI/badge.svg) ![Heroku](https://heroku-badge.herokuapp.com/?app=tweet-music-recognizer)
+# tweet-music-recognizer ![CI](https://github.com/MateusAquino/tweet-music-recognizer/workflows/CI/badge.svg) [![Heroku](http://heroku-shields.herokuapp.com/tweet-music-recognizer)](https://tweet-music-recognizer.herokuapp.com)
 Node.js Bot to identify songs in Twitter videos!  
 Audio Recognition provided by [ACRCloud](https://www.acrcloud.com/).  
 Mention [@nomemusica](https://twitter.com/nomemusica) (pt-BR) to a music video for a live preview.
