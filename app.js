@@ -45,6 +45,8 @@ function setupTwitter() {
         stream.on('error', function (error) {
             console.log('Error: failed to link stream listener to Twitter.');
             console.log(error);
+            console.log('Retrying in 5s...');
+            setTimeout(()=>setupTwitter(), 5000);
         });
     });
 }
