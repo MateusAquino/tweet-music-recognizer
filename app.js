@@ -1,6 +1,5 @@
 require('dotenv').config();
 const fs = require('fs');
-const path = require('path');
 const axios = require('axios');
 const app = require('./config/server.js');
 const cliente = require('./config/twitter.js');
