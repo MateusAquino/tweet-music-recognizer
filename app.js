@@ -60,25 +60,51 @@ async function replyWithSong(tweetID, postData) {
             const acr = require('./config/acr.js');  // ACR = API para identificar fingerprints de audios e
             console.log('Identifying song...');      // obter os dados da música (nome, artista, ...)
             identifyTempMp4(acr, hash, song => {
-                fs.unlink(`./tempVideos/${hash}.mp4`, (err) => { if (err) console.error(err); });
                 let songName = "";
                 if (song === "404") {
-                    console.log("Fingerprint failed!");
-                    postData[1].status += `Não consegui identificar a música :(`;
-                    cliente.post(...postData, () => console.log(`ACRCloud could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
-                    return;
+                    console.log("ACR Fingerprint failed!");
+                    if (!process.env.rapidapi_shazam_key.includes('optional')) { // Se tiver a key do Shazam
+                        identifyTempMp4Shazam(hash, song => {
+                            fs.unlink(`./tempVideos/${hash}.mp4`, (err) => { if (err) console.error(err); });
+                            if (song === "404") {
+                                console.log("Shazam Fingerprint failed!");
+                                postData[1].status += `Não consegui identificar a música :(`;
+                                cliente.post(...postData, () => console.log(`ACRCloud & Shazam could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
+                                return;
+                            } else if (song === "405") {
+                                console.log("Shazam's API Limit exceed!");
+                                postData[1].status += `Acabou o limite mensal de uso da API :(\nTalvez você possa me ajudar criando uma Key em rapidapi.com/apidojo/api/shazam e enviando na dm! c:`;
+                                cliente.post(...postData, () => console.log(`ACRCloud could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
+                                return;
+                            }
+
+                            searchYTCardAndSend(song, postData); // search & send
+                        });
+                        return;
+                    } else {
+                        fs.unlink(`./tempVideos/${hash}.mp4`, (err) => { if (err) console.error(err); });
+                        postData[1].status += `Não consegui identificar a música :(`;
+                        cliente.post(...postData, () => console.log(`ACRCloud could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
+                        return;
+                    }
                 }
+                fs.unlink(`./tempVideos/${hash}.mp4`, (err) => { if (err) console.error(err); });
                 for (s of song[0].artists)
                     songName += s.name + ", ";
                 songName = songName.slice(0, -2) + ' - ' + song[0].title; // Resultado Final: "Artist1, Artist2, ... - Song Name"
-                console.log(`Searching yt ID for: '${songName}'`);
-                youtubeSearch(songName, search => {                       // Era opcional, mas por estética optei por mandar um card do youtube
-                    console.log(`Found: '${search}'`);
-                    postData[1].status += `${songName} https://youtu.be/${search}`; // Add o card do youtube no tweet
-                    cliente.post(...postData, () => console.log('Tweet sent!'));    // Envia tweet
-                });
+
+                searchYTCardAndSend(songName, postData); // search & send
             });
         });
+    });
+}
+
+function searchYTCardAndSend(songName, postData) {
+    console.log(`Searching yt ID for: '${songName}'`);
+    youtubeSearch(songName, search => {                                 // Era opcional, mas por estética optei por mandar um card do youtube
+        console.log(`Found: '${search}'`);
+        postData[1].status += `${songName} https://youtu.be/${search}`; // Add o card do youtube no tweet
+        cliente.post(...postData, () => console.log('Tweet sent!'));    // Envia tweet
     });
 }
 
@@ -92,13 +118,19 @@ function getTwitterMp4URL(tweetID, callback) {
         if (tweet[0].extended_entities === undefined) return; // Tweet sem mídia
         if (tweet[0].extended_entities.media[0].video_info === undefined) return; // Tweet sem video
         const mediaURL = tweet[0].extended_entities.media[0].video_info.variants[0].url;
+        for (let media of tweet[0].extended_entities.media[0].video_info.variants) {
+            if (media.content_type === 'video/mp4') {
+                callback(media.url);
+                return;
+            }
+        }    
         callback(mediaURL);
     });
 }
 
 // Baixa um .mp4 da Web para o arquivo ./temp.mp4
 async function downloadTempMp4File(url, hash, callback) {
-    const tempFile = path.resolve(__dirname, 'tempVideos', `${hash}.mp4`)
+    const tempFile = process.cwd() + `/tempVideos/${hash}.mp4`;
     const response = await axios({
         url,
         method: 'GET',
@@ -118,12 +150,16 @@ async function downloadTempMp4File(url, hash, callback) {
 // Utiliza o ACR para identificar a música do arquivo ./temp.mp4
 function identifyTempMp4(acr, hash, callback) {
     const fs = require("fs");
-    const sample = fs.readFileSync(`./tempVideos/${hash}.mp4`);
-
+    const sample = fs.readFileSync(process.cwd() + `/tempVideos/${hash}.mp4`);
     acr(api => api.identify(sample).then(metadata => {
         const statusMsg = metadata.status.msg;
         callback(statusMsg === 'Success' ? metadata['metadata']['music'] : '404');
     }));
+}
+
+function identifyTempMp4Shazam(hash, callback) {
+    const shazam = require('./config/shazam.js');
+    shazam(process.cwd() + `/tempVideos/${hash}.mp4`, song => callback(song));
 }
 
 // Obtem o id do vídeo do youtube pela pesquisa "Artista - Música"
