@@ -29,6 +29,8 @@ npm install # once only
 npm start
 ```
 
+**Note:** Anti-spam response messages are hardcoded into the bottom of `app.js`.
+
 ## 📜 License
 
 [MIT](./LICENSE) &copy; [Mateus Aquino](https://www.linkedin.com/in/mateusaquino/)

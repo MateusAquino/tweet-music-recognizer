@@ -7,14 +7,17 @@ var utcmonth = new Date().getUTCMonth();
 function convertToRAWbase64(filename, cb) {
     const rawfilename = filename.split('mp4')[0]+'raw';
     ffmpeg(filename)
+        .inputOptions([
+            '-sseof', '-8s'
+        ])
         .output(rawfilename)
         .outputOptions([
+            '-t', '5s',
   	        '-acodec', 'pcm_s16le',
   	        '-f', 's16le',
   	        '-ac', '1',
   	        '-ar', '44100'
   	    ])
-        .duration(5)
         .on('error', function(err) {
             console.log('An error occurred (FFMPEG): ' + err.message);
         })

@@ -20,9 +20,29 @@ app.listen(server_port, server_host, function () {
     console.log("Application: online.");
 });
 
+let logList = [], log = console.log;
+console.log = (...args) => { logList.push(...args); log(...args); if (logList.length>200) logList.splice(0,100)};
+
+
+app.get('/logs', (req, res) => {
+    usesPerDay = fs.readFileSync('usesPerDay', 'utf8').split(':')[1];
+    usesPerMonth = fs.readFileSync('usesPerMonth', 'utf8').split(':')[1];
+
+    let fulllog = '<style>body {background-color:white;}</style>' +
+    `Used today (ACR): ${usesPerDay}<br/>Used this month (Shazam): ${usesPerMonth}<br/><br/><b>Logs:</b><br/><pre><code>`;
+    for (let l of logList) {
+        fulllog += l + '\n';
+    }
+    fulllog += '</code></pre>';
+    res.send(fulllog);
+});
+
 app.get('/', (req, res) => {
     res.send('This application is online.');
 });
+
+let recentRequests = {};
+let current2Hours = 13;
 
 // Primeira função a ser executada
 function setupTwitter() {
@@ -36,8 +56,26 @@ function setupTwitter() {
             const childUsername = event.user.screen_name;
             const postData = ['statuses/update', {
                 in_reply_to_status_id: childTweet,
-                status: `@${parentUsername} @${childUsername} `
+                status: `@${childUsername} `       // Removed ${parentUsername} 
             }];
+            var twoHours = Math.floor(new Date().getHours()/2.0);
+            if (current2Hours != twoHours) {
+                current2Hours = twoHours;
+                recentRequests = {};
+            }
+
+            if (!recentRequests[childUsername]) recentRequests[childUsername] = 1
+            else recentRequests[childUsername] = recentRequests[childUsername] + 1
+            if (recentRequests[childUsername] === 3)
+                postData[1].status += 'Por favor, não spamme o bot (e evite responder fancams me marcando)\n'
+            else if (recentRequests[childUsername] > 3) {
+                cliente.post('blocks/create.json', {
+                    screen_name: childUsername,
+                    skip_status: 1
+                }, ()=>{console.log(`${childUsername} foi bloqueado(a) por spam.`)});
+                return;
+            }
+
             replyWithSong(parentTweet, postData);
         });
 
@@ -67,12 +105,12 @@ async function replyWithSong(tweetID, postData) {
                             fs.unlink(`./tempVideos/${hash}.mp4`, (err) => { if (err) console.error(err); });
                             if (song === "404") {
                                 console.log("Shazam Fingerprint failed!");
-                                postData[1].status += `Não consegui identificar a música :(`;
+                                postData[1].status += randomMsg(song);
                                 cliente.post(...postData, () => console.log(`ACRCloud & Shazam could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
                                 return;
                             } else if (song === "405") {
                                 console.log("Shazam's API Limit exceed!");
-                                postData[1].status += `Acabou o limite mensal de uso da API :(\nTalvez você possa me ajudar criando uma Key em rapidapi.com/apidojo/api/shazam e enviando na dm! c:`;
+                                postData[1].status += randomMsg(song);
                                 cliente.post(...postData, () => console.log(`ACRCloud could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
                                 return;
                             }
@@ -82,7 +120,7 @@ async function replyWithSong(tweetID, postData) {
                         return;
                     } else {
                         fs.unlink(`./tempVideos/${hash}.mp4`, (err) => { if (err) console.error(err); });
-                        postData[1].status += `Não consegui identificar a música :(`;
+                        postData[1].status += randomMsg(song);
                         cliente.post(...postData, () => console.log(`ACRCloud could not detect song for TwID: ${tweetID}!`)); // Envia tweet + log console
                         return;
                     }
@@ -90,7 +128,7 @@ async function replyWithSong(tweetID, postData) {
                 fs.unlink(`./tempVideos/${hash}.mp4`, (err) => { if (err) console.error(err); });
                 for (s of song[0].artists)
                     songName += s.name + ", ";
-                songName = songName.slice(0, -2) + ' - ' + song[0].title; // Resultado Final: "Artist1, Artist2, ... - Song Name"
+                songName = songName.slice(0, -2).replace(';', ', ') + ' - ' + song[0].title; // Resultado Final: "Artist1, Artist2, ... - Song Name"
 
                 searchYTCardAndSend(songName, postData); // search & send
             });
@@ -102,8 +140,11 @@ function searchYTCardAndSend(songName, postData) {
     console.log(`Searching yt ID for: '${songName}'`);
     youtubeSearch(songName, search => {                                 // Era opcional, mas por estética optei por mandar um card do youtube
         console.log(`Found: '${search}'`);
-        postData[1].status += `${songName} https://youtu.be/${search}`; // Add o card do youtube no tweet
-        cliente.post(...postData, () => console.log('Tweet sent!'));    // Envia tweet
+        postData[1].status += `${randomMsg(songName)} https://youtu.be/${search}`; // Add o card do youtube no tweet
+        cliente.post(...postData, (error, tweet, response) => {
+            if (error) console.log('Failed to tweet:', error)
+            else console.log('Tweet sent!')
+        });
     });
 }
 
@@ -169,6 +210,48 @@ async function youtubeSearch(query, callback) {
         type: 'video'
     });
     callback(search['items'][0]['id']['videoId']);
+}
+
+// Anti-spam (random messages)
+function randomMsg(resultado) {
+    var pick = array => array[Math.floor(Math.random() * array.length)];
+    switch (resultado) {
+        case '404':
+            return pick(['não consegui identificar a música :(', 
+                         'desculpa, não encontrei esse audio no banco... 👉👈',
+                         'juro que procurei por 72 milhões de faixas e não encontrei essa :(',
+                         'deu ruim... não encontrei essa musica 🥺',
+                         'falhei em encontrar sua música, por favor me perdoe 😖',
+                         'eu tinha um trabalho, e falhei com você 🤧',
+                         'essa musica aparentemente não está no meu banco :c',
+                         'não consegui reconhecer essa música :c',
+                         'adorei a musica mas infelizmente não sei o nome dela :/',
+                         'uou! essa eu nao conheço 😳',
+                         'nn vou saber te dizer essa, desculpa :/']);
+        case '405':
+            return pick(['Acabou o limite mensal de uso da API :(\nTalvez você possa me ajudar criando uma Key Basic em rapidapi.com/apidojo/api/shazam e enviando na dm! c:',
+                         'Desculpa, a API que eu uso é gratuita e terminou a minha cota de uso :c\nSe quiser ajudar, você pode criar uma Basic Key em rapidapi.com/apidojo/api/shazam e me enviar na dm!',
+                         'Deu ruim... 😳\nSó tenho alguns usos por mês na API :c Maaas, se quiser me ajudar a aumentar, da pra criar uma Key Basic no rapidapi.com/apidojo/api/shazam/details e me mandar na dm :d',
+                         'O bot não tem mais usos nesse mês! D:\nAcabou os usos mensais, porém se quiser ajudar a aumentar, cria uma Key (Basic) no rapidapi.com/apidojo/api/shazam/ e me manda na dm! hihihi',
+                         'Botzinho está sem mais usos!\nSe quiser ajudar criando uma Key (Basic) no site rapidapi.com/apidojo/api/shazam/details e me mandar na dm... 👉👈',
+                         'Não consigo procurar mais 🥺\nAcabaram os usos da API secundária, mas você pode me ajudar criando uma Key [Basic] no site rapidapi.com/apidojo/api/shazam/ e me mandar <3']);
+        default:
+            return pick(['ta na mão $resultado',
+                         'creio que seja $resultado',
+                         'fontes me dizem q é $resultado',
+                         'acredito que $resultado',
+                         'se pá que é $resultado',
+                         'ui ui $resultado',
+                         'talvez seja $resultado',
+                         'achei essa aq pacero: $resultado',
+                         '$resultado eu acho',
+                         '$resultado 😳',
+                         '$resultado 👉👈',
+                         '$resultado 😎',
+                         '✨ $resultado ✨',
+                         '⚡️ $resultado ⚡️',
+                         '🔥👀 $resultado']).replace('$resultado', resultado);
+    }
 }
 
 setupTwitter();
