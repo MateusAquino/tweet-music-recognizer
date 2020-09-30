@@ -139,8 +139,14 @@ async function replyWithSong(tweetID, postData) {
 function searchYTCardAndSend(songName, postData) {
     console.log(`Searching yt ID for: '${songName}'`);
     youtubeSearch(songName, search => {                                 // Era opcional, mas por estética optei por mandar um card do youtube
-        console.log(`Found: '${search}'`);
-        postData[1].status += `${randomMsg(songName)} https://youtu.be/${search}`; // Add o card do youtube no tweet
+        if (search==='404') {
+            console.log(`Youtube video ID not found!`);    
+            postData[1].status += `Não encontrei o vídeo mas o nome da música talvez seja ${songName}`;
+        } else {
+            console.log(`Found: '${search}'`);
+            postData[1].status += `${randomMsg(songName)} https://youtu.be/${search}`; // Add o card do youtube no tweet
+        }
+
         cliente.post(...postData, (error, tweet, response) => {
             if (error) console.log('Failed to tweet:', error)
             else console.log('Tweet sent!')
@@ -209,7 +215,10 @@ async function youtubeSearch(query, callback) {
         part: 'snippet',
         type: 'video'
     });
-    callback(search['items'][0]['id']['videoId']);
+    if (search['items'][0])
+        callback(search['items'][0]['id']['videoId']);
+    else 
+        callback('404');
 }
 
 // Anti-spam (random messages)
@@ -217,17 +226,17 @@ function randomMsg(resultado) {
     var pick = array => array[Math.floor(Math.random() * array.length)];
     switch (resultado) {
         case '404':
-            return pick(['não consegui identificar a música :(', 
-                         'desculpa, não encontrei esse audio no banco... 👉👈',
-                         'juro que procurei por 72 milhões de faixas e não encontrei essa :(',
-                         'deu ruim... não encontrei essa musica 🥺',
-                         'falhei em encontrar sua música, por favor me perdoe 😖',
-                         'eu tinha um trabalho, e falhei com você 🤧',
-                         'essa musica aparentemente não está no meu banco :c',
-                         'não consegui reconhecer essa música :c',
-                         'adorei a musica mas infelizmente não sei o nome dela :/',
-                         'uou! essa eu nao conheço 😳',
-                         'nn vou saber te dizer essa, desculpa :/']);
+            return pick(['Não consegui identificar a música :(', 
+                         'Desculpa, não encontrei esse audio no banco... 👉👈',
+                         'Juro que procurei por 72 milhões de faixas e não encontrei essa :(',
+                         'Deu ruim... não encontrei essa musica 🥺',
+                         'Falhei em encontrar sua música, por favor me perdoe 😖',
+                         'Eu tinha um trabalho, e falhei com você 🤧',
+                         'Essa musica aparentemente não está no meu banco :c',
+                         'Não consegui reconhecer essa música :c',
+                         'Adorei a musica mas infelizmente não sei o nome dela :/',
+                         'Uou! essa eu nao conheço 😳',
+                         'Nn vou saber te dizer essa, desculpa :/']);
         case '405':
             return pick(['Acabou o limite mensal de uso da API :(\nTalvez você possa me ajudar criando uma Key Basic em rapidapi.com/apidojo/api/shazam e enviando na dm! c:',
                          'Desculpa, a API que eu uso é gratuita e terminou a minha cota de uso :c\nSe quiser ajudar, você pode criar uma Basic Key em rapidapi.com/apidojo/api/shazam e me enviar na dm!',
@@ -236,14 +245,14 @@ function randomMsg(resultado) {
                          'Botzinho está sem mais usos!\nSe quiser ajudar criando uma Key (Basic) no site rapidapi.com/apidojo/api/shazam/details e me mandar na dm... 👉👈',
                          'Não consigo procurar mais 🥺\nAcabaram os usos da API secundária, mas você pode me ajudar criando uma Key [Basic] no site rapidapi.com/apidojo/api/shazam/ e me mandar <3']);
         default:
-            return pick(['ta na mão $resultado',
-                         'creio que seja $resultado',
-                         'fontes me dizem q é $resultado',
-                         'acredito que $resultado',
-                         'se pá que é $resultado',
+            return pick(['Ta na mão $resultado',
+                         'Creio que seja $resultado',
+                         'Fontes me dizem q seja $resultado',
+                         'Acredito que $resultado',
+                         'Se pá que é $resultado',
                          'ui ui $resultado',
-                         'talvez seja $resultado',
-                         'achei essa aq pacero: $resultado',
+                         'Talvez seja $resultado',
+                         'Achei essa aq pacero: $resultado',
                          '$resultado eu acho',
                          '$resultado 😳',
                          '$resultado 👉👈',
