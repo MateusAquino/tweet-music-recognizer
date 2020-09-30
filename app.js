@@ -43,6 +43,7 @@ app.get('/', (req, res) => {
 
 let recentRequests = {};
 let current2Hours = 13;
+let coolDown = 5;
 
 // Primeira função a ser executada
 function setupTwitter() {
@@ -82,8 +83,16 @@ function setupTwitter() {
         stream.on('error', function (error) {
             console.log('Error: failed to link stream listener to Twitter.');
             console.log(error);
-            console.log('Retrying in 5s...');
-            setTimeout(()=>setupTwitter(), 5000);
+            console.log(`Retrying in ${cooldown}s...`);
+            setTimeout(()=>setupTwitter(), cooldown*1000);
+            if (cooldown === 5)
+                cooldown = 10;
+            else if (cooldown === 10)
+                cooldown = 60;
+            else if (cooldown === 60)
+                cooldown = 120;
+            else 
+                cooldown = 5;
         });
     });
 }
