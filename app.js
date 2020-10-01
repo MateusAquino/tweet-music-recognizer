@@ -20,8 +20,9 @@ app.listen(server_port, server_host, function () {
     console.log("Application: online.");
 });
 
-let logList = [], log = console.log;
+let logList = [], log = console.log, logError = console.error;
 console.log = (...args) => { logList.push(...args); log(...args); if (logList.length>200) logList.splice(0,100)};
+console.error = (...args) => { logList.push(...args); logError(...args); if (logList.length>200) logList.splice(0,100)};
 
 
 app.get('/logs', (req, res) => {
@@ -43,7 +44,7 @@ app.get('/', (req, res) => {
 
 let recentRequests = {};
 let current2Hours = 13;
-let coolDown = 5;
+let cooldown = 5;
 
 // Primeira função a ser executada
 function setupTwitter() {
@@ -51,33 +52,16 @@ function setupTwitter() {
         track: '@nomemusica' // Quando alguem fizer uma @mention
     }, function (stream) {
         stream.on('data', function (event) {
+            if (!isTweet(event)) return;
             const parentTweet = event.in_reply_to_status_id_str;
             const childTweet = event.id_str;
-            const parentUsername = event.in_reply_to_screen_name;
             const childUsername = event.user.screen_name;
             const postData = ['statuses/update', {
                 in_reply_to_status_id: childTweet,
                 status: `@${childUsername} `       // Removed ${parentUsername} 
             }];
-            var twoHours = Math.floor(new Date().getHours()/2.0);
-            if (current2Hours != twoHours) {
-                current2Hours = twoHours;
-                recentRequests = {};
-            }
 
-            if (!recentRequests[childUsername]) recentRequests[childUsername] = 1
-            else recentRequests[childUsername] = recentRequests[childUsername] + 1
-            if (recentRequests[childUsername] === 3)
-                postData[1].status += 'Por favor, não spamme o bot (e evite responder fancams me marcando)\n'
-            else if (recentRequests[childUsername] > 3) {
-                cliente.post('blocks/create.json', {
-                    screen_name: childUsername,
-                    skip_status: 1
-                }, ()=>{console.log(`${childUsername} foi bloqueado(a) por spam.`)});
-                return;
-            }
-
-            replyWithSong(parentTweet, postData);
+            replyWithSong(parentTweet, postData, childUsername);
         });
 
         stream.on('error', function (error) {
@@ -97,11 +81,16 @@ function setupTwitter() {
     });
 }
 
+function isTweet(event) {
+    const isString = obj => typeof obj === 'string' || obj instanceof String;
+    return isString(event.id_str) && isString(event.text) && isString(event.in_reply_to_status_id_str);
+}
+
 // Responde o tweet (tweetID) com a musica que será encontrada
-async function replyWithSong(tweetID, postData) {
+async function replyWithSong(tweetID, postData, childUsername) {
     const hash = (Math.random().toString(36)+'00000000000000000').slice(2, 7); // Gera Hash aleatório de 5 caracteres
 
-    await getTwitterMp4URL(tweetID, url => {
+    await getTwitterMp4URL(tweetID, postData, childUsername, url => {
         downloadTempMp4File(url, hash, () => {
             const acr = require('./config/acr.js');  // ACR = API para identificar fingerprints de audios e
             console.log('Identifying song...');      // obter os dados da música (nome, artista, ...)
@@ -164,7 +153,7 @@ function searchYTCardAndSend(songName, postData) {
 }
 
 // Obtem a URL de um vídeo do Twitter
-function getTwitterMp4URL(tweetID, callback) {
+function getTwitterMp4URL(tweetID, postData, childUsername, callback) {
     cliente.get('statuses/lookup', {
         id: tweetID,
         tweet_mode: 'extended' // Importante para obter a URL do vídeo
@@ -172,6 +161,25 @@ function getTwitterMp4URL(tweetID, callback) {
         if (tweet[0] === undefined) return; // Tweet não é um reply
         if (tweet[0].extended_entities === undefined) return; // Tweet sem mídia
         if (tweet[0].extended_entities.media[0].video_info === undefined) return; // Tweet sem video
+        
+        // ANTI-SPAM
+        var twoHours = Math.floor(new Date().getHours()/2.0); 
+        if (current2Hours != twoHours) {
+            current2Hours = twoHours;
+            recentRequests = {};
+        }
+        if (!recentRequests[childUsername]) recentRequests[childUsername] = 1
+        else recentRequests[childUsername] = recentRequests[childUsername] + 1
+        if (recentRequests[childUsername] === 3)
+            postData[1].status += 'Por favor, não spamme o bot (e evite responder fancams me marcando)\n'
+        else if (recentRequests[childUsername] > 3) {
+            cliente.post('blocks/create.json', {
+                screen_name: childUsername,
+                skip_status: 1
+            }, ()=>{console.log(`${childUsername} foi bloqueado(a) por spam.`)});
+            return;
+        }
+            
         const mediaURL = tweet[0].extended_entities.media[0].video_info.variants[0].url;
         for (let media of tweet[0].extended_entities.media[0].video_info.variants) {
             if (media.content_type === 'video/mp4') {
