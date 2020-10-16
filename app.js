@@ -52,7 +52,13 @@ function setupTwitter() {
         track: '@nomemusica' // Quando alguem fizer uma @mention
     }, function (stream) {
         stream.on('data', function (event) {
-            if (!isTweet(event)) return;
+            if (!isTweet(event)) {
+                if (event.disconnect) {
+                    (stream.removeAllListeners | ((x)=>{}))('data');
+                    setTimeout(()=>setupTwitter(), 7000);
+                }
+                return;
+            }
             const parentTweet = event.in_reply_to_status_id_str;
             const childTweet = event.id_str;
             const childUsername = event.user.screen_name;
@@ -232,7 +238,7 @@ async function youtubeSearch(query, callback) {
         part: 'snippet',
         type: 'video'
     });
-    if (search['items'][0])
+    if (search['items'] && search['items'][0])
         callback(search['items'][0]['id']['videoId']);
     else 
         callback('404');
