@@ -4,6 +4,8 @@ const axios = require('axios');
 const app = require('./config/server.js');
 const cliente = require('./config/twitter.js');
 const searchYoutube = require('youtube-api-v3-search');
+const { Console } = require('console');
+const { env } = require('process');
 
 if (process.env.twitter_consumer_key === "XXXXX") {
     console.log("Warning! This script won't run properly without tokens and keys (Twitter, ACR & Youtube Data).");
@@ -51,9 +53,15 @@ function setupTwitter() {
     cliente.stream('statuses/filter', {
         track: '@nomemusica' // Quando alguem fizer uma @mention
     }, function (stream) {
+        setInterval(()=>{console.log("Listeners: "+stream.listenerCount('data'))}, 60000);
         stream.on('data', function (event) {
+            console.log("------------------------");
+            console.log(event);
+            console.log("------------------------");
             if (!isTweet(event)) {
+                console.log("Not a Tweet:", event);
                 if (event.disconnect) {
+                    console.log("Disconnect:", event.disconnect);
                     (stream.removeAllListeners | ((x)=>{}))('data');
                     setTimeout(()=>setupTwitter(), 7000);
                 }
@@ -66,23 +74,27 @@ function setupTwitter() {
                 in_reply_to_status_id: childTweet,
                 status: `@${childUsername} `       // Removed ${parentUsername} 
             }];
-
+            console.log("Mention detected: ", event.in_reply_to_status_id);
             replyWithSong(parentTweet, postData, childUsername);
         });
 
         stream.on('error', function (error) {
             console.log('Error: failed to link stream listener to Twitter.');
             console.log(error);
-            console.log(`Retrying in ${cooldown}s...`);
-            setTimeout(()=>setupTwitter(), cooldown*1000);
-            if (cooldown === 5)
-                cooldown = 10;
-            else if (cooldown === 10)
-                cooldown = 60;
-            else if (cooldown === 60)
-                cooldown = 120;
-            else 
-                cooldown = 5;
+            if (process.env.stopRetrying) {
+                console.log(`Retrying in ${cooldown}s...`);
+                setTimeout(()=>setupTwitter(), cooldown*1000);
+                if (cooldown === 5)
+                    cooldown = 10;
+                else if (cooldown === 10)
+                    cooldown = 60;
+                else if (cooldown === 60)
+                    cooldown = 120;
+                else if (cooldown === 120)
+                    cooldown = 240;
+                else 
+                    cooldown = 5;
+            }
         });
     });
 }
