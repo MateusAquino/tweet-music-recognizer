@@ -35,7 +35,9 @@ npm start
 All your tokens (gathered in [Setup](https://github.com/MateusAquino/tweet-music-recognizer#-setup)) should be set in this step.  
 Access the `/adm` endpoint passing your `backendpass` (from `.env`) like this:  
 
-```http://localhost:3000/adm?pass=example```
+```
+http://localhost:3000/adm?pass=example
+```
 
 • `stopRetrying` checkbox will make your app stop trying to login to Twitter.
 

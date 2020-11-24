@@ -16,12 +16,14 @@ main = async () => {
             return twitter.replyTo(id, screenName, `twitter.com/me/status/${setRecognized}`);
 
         // Download Media
+        console.log('Identification in progress... (twid: ' + tweet.id_str + ')')
         let tempFile = await download(mediaURL);
         if (tempFile === false) return console.log('Couldn\'t download media');
 
         // Identify song
         let res = await identifyACR(tempFile);
         res = res ? res : await identifyShazam(tempFile);
+        console.log('Song Identified: ' + res);
 
         // Youtube Card
         const card = res ? await youtubeCard(res) : false;
