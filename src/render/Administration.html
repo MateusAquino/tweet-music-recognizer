@@ -1,0 +1,43 @@
+<html style='margin:0'><head><title>Control Panel</title></head>
+<body style="height: 0; background-color:#282a36;color:#f8f8f2;font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">
+
+<div style='margin-left: 2vw;float:left;height:917px;width:50vw;background-color:#44475a;'>
+    <center style='width: 100%;height:100px; background-color:#44475a;'>
+        <h1 style='margin-top:0;padding-top:40px;'>Logs</h1>
+    </center>
+    <pre id='logs' style='overflow: scroll; padding: 10px;height: 770px;margin: 0px 30px 0 30px; word-wrap: break-word'><code><%= logs %></code></pre>
+</div>
+
+<center style='margin-top:30px;'>
+<div style='margin-right: 2vw;background-color:#44475a;width:30vw;padding:30px;float:right;'>
+<h1>Administration</h1>
+<p>Green borders (onchange) means it'll update</p>
+<h3>Control Panel</h3>
+<form action='/adm?pass=<%= pass %>' method='post' name='config' target='_self'>
+    <input name='pass' type='hidden' value='<%= pass %>'/>
+
+    <label for='acr_host'>                    acr_host</label><br>                       <input    oninput='change(this)' id='acr_host'                    required value='<%= acr_host %>'/><br><br>
+    <label for='acr_access_key_secret'>       acr_access_key_secret</label><br>          <textarea oninput='change(this)' id='acr_access_key_secret'       required style='resize:none; white-space: nowrap;  overflow: auto;' wrap="soft" cols=50 rows=6 placeholder='KEY1, SECRET1, USED_TODAY&#10;KEY2, SECRET2, USED_TODAY&#10;&#10;Ex:&#10;d987f4b74ee192a4e, e9616d0da4d8, 0'><%= acr_access_key_secret %></textarea><br><br>
+    <label for='rapidapi_shazam_key'>         rapidapi_shazam_key (optional)</label><br> <textarea oninput='change(this)' id='rapidapi_shazam_key'         required style='resize:none; white-space: nowrap;  overflow: auto;' wrap="soft" cols=50 rows=6 placeholder='KEY1, USED_THIS_MONTH&#10;KEY2, USED_THIS_MONTH&#10;&#10;Ex:&#10;4ee192a4ee9616d0, 13'><%= rapidapi_shazam_key %></textarea><br><br>
+    <label for='youtube_access_token'>        youtube_access_token</label><br>           <input    oninput='change(this)' id='youtube_access_token'        required value='<%= youtube_access_token %>'/><br><br>
+    <label for='twitter_consumer_key'>        twitter_consumer_key</label><br>           <input    oninput='change(this)' id='twitter_consumer_key'        required value='<%= twitter_consumer_key %>'/><br><br>
+    <label for='twitter_consumer_secret'>     twitter_consumer_secret</label><br>        <input    oninput='change(this)' id='twitter_consumer_secret'     required value='<%= twitter_consumer_secret %>'/><br><br>
+    <label for='twitter_access_token_key'>    twitter_access_token_key</label><br>       <input    oninput='change(this)' id='twitter_access_token_key'    required value='<%= twitter_access_token_key %>'/><br><br>
+    <label for='twitter_access_token_secret'> twitter_access_token_secret</label><br>    <input    oninput='change(this)' id='twitter_access_token_secret' required value='<%= twitter_access_token_secret %>'/><br><br>
+
+    <input type='checkbox' name='stopRetrying' id='stopRetrying' <%= stopRetrying %>/> <label for='stopRetrying'>stopRetrying</label><br><br>
+    <input type="submit" value="Save Changes">
+    <!--<input type="submit" value="Re-stream" name="restream">-->
+</form>
+</div>
+</center>
+
+<script>
+    var logs = document.getElementById('logs');
+    logs.scrollTop = logs.scrollHeight;
+    function change(input) {
+        input.setAttribute('name', input.id);
+        input.style.outline = '4px #50fa7b solid';
+    }
+</script>
+</body></html>
