@@ -16,23 +16,27 @@ main = async () => {
             return twitter.replyTo(id, screenName, `twitter.com/me/status/${setRecognized}`);
 
         // Download Media
-        console.log('Identification in progress... (twid: ' + tweet.id_str + ')')
+        console.log('------ New Identification in progress... (twid: ' + tweet.id_str + ') ------')
         let tempFile = await download(mediaURL);
         if (tempFile === false) return console.log('Couldn\'t download media');
 
         // Identify song
         let res = await identifyACR(tempFile);
         res = res ? res : await identifyShazam(tempFile);
-        console.log('Song Identified: ' + res);
+        console.log(res ? 'Song Identified: ' + res : 'No songs matching were found.');
+
+        // Check for wrong song names
+        if (res && process.env.wrongsongs && process.env.wrongsongs[res])
+            res = process.env.wrongsongs[res];
 
         // Youtube Card
         const card = res ? await youtubeCard(res) : false;
         let message = warnSpam ? 'Por favor, não spamme o bot (e evite responder fancams me marcando)\n' : '';
 
         // Prettify output
-        if (res && card) message = `${prettyMessage(res)} ${card}`;
-        else if (res) message = `Não encontrei o vídeo mas o nome da música talvez seja '${res}'.`;
-        else message = `${prettyMessage(res)}`;
+        if (res && card) message += `${prettyMessage(res)} ${card}`;
+        else if (res) message += `Não encontrei o vídeo mas o nome da música talvez seja '${res}'.`;
+        else message += `${prettyMessage(res)}`;
 
         // Reply & Add to already recognized list
         const reply = await twitter.replyTo(id, screenName, message);

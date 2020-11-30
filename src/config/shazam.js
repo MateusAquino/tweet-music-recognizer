@@ -22,11 +22,11 @@ class Shazam {
       	        '-ar', '44100'
       	    ])
             .on('error', function(err) {
-                console.log('An error occurred (FFMPEG): ' + err.message);
+                console.error('An error occurred (FFMPEG): ' + err.message);
                 reject();
             })
             .on('end', async function() {
-                console.log('Processing finished! (Shazam)');
+                console.log('[Shazam] Processing finished!');
                 const data = await fs.readFileSync(fileraw).toString('base64');
                 resolve(data);
       	    })
@@ -38,7 +38,7 @@ class Shazam {
       	    "method":"POST",
       	    "url":"https://shazam.p.rapidapi.com/songs/detect",
       	    "headers":{
-         		    "content-type": "text/plain",
+         		"content-type": "text/plain",
       	        "x-rapidapi-host": "shazam.p.rapidapi.com",
       	        "x-rapidapi-key": token,
       	        "useQueryString": true
@@ -62,7 +62,7 @@ class Shazam {
       		if (error.response && error.response.data) {
                 const msg = error.response.data.message;
                 console.error(msg);
-      			if (msg.includes('this API') || msg.includes('limit'))
+      			if (msg && msg.includes('this API') || msg.includes('limit'))
                     resolve('405'); // Limite da API alcançado
                 else 
                     resolve('404'); // API offline

@@ -13,6 +13,7 @@ class Twitter {
     }
 
     static stream(callback) {
+        console.log('Starting stream...')
         if (Twitter.online) Twitter.online.destroy();
 
         Twitter.client.stream('statuses/filter', {
@@ -39,7 +40,7 @@ class Twitter {
                 Twitter.online = false;
                 console.log('Error: failed to link stream listener to Twitter.');
                 console.log(error.message ? error.message : 'End of stream.');
-                if (await Config.get('stopRetrying')) {
+                if (!await Config.get('stopRetrying')) {
                     console.log(`Retrying in ${cooldown}s...`);
                     setTimeout(()=>Twitter.stream(callback), cooldown*1000);
                     if (cooldown === 5) cooldown = 10;
