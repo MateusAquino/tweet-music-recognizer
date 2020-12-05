@@ -39,18 +39,22 @@ class Twitter {
             const errorFn = async error => {
                 Twitter.online = false;
                 console.log('Error: failed to link stream listener to Twitter.');
-                console.log(error.message ? error.message : 'End of stream.');
-                if (!await Config.get('stopRetrying')) {
-                    console.log(`Retrying in ${cooldown}s...`);
-                    setTimeout(()=>Twitter.stream(callback), cooldown*1000);
-                    if (cooldown === 5) cooldown = 10;
-                    else if (cooldown === 10) cooldown = 60;
-                    else if (cooldown === 60) cooldown = 120;
-                    else if (cooldown === 120) cooldown = 240;
-                    else if (cooldown === 240) cooldown = 420;
-                    else if (cooldown === 420) cooldown = 1020;
-                    else  cooldown = 5;
-                }
+                
+                if (!error.message || error.message === 'End of stream.') {
+                    console.log('End of stream.')
+                    if (!await Config.get('stopRetrying')) {
+                        console.log(`Retrying in ${cooldown}s...`);
+                        setTimeout(()=>Twitter.stream(callback), cooldown*1000);
+                        if (cooldown === 5) cooldown = 10;
+                        else if (cooldown === 10) cooldown = 60;
+                        else if (cooldown === 60) cooldown = 120;
+                        else if (cooldown === 120) cooldown = 240;
+                        else if (cooldown === 240) cooldown = 420;
+                        else if (cooldown === 420) cooldown = 1020;
+                        else  cooldown = 5;
+                    }
+                } else 
+                    console.log(error.message);
             };
 
             // Stream
