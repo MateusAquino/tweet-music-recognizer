@@ -4,6 +4,7 @@ identifyTempMp4Shazam = async tempFile => {
 
     const songName = await shazam.identify(tempFile.path, tempFile.pathRaw);
     return songName &&
+           songName !== '599' &&
            songName !== '404' && 
            songName !== '405' ? songName : false;
 }

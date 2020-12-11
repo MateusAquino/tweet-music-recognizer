@@ -51,16 +51,15 @@ class Shazam {
                 resolve(subtitle + ' - ' + title);
             } else if (response.data) { // Musica não encontrada
                 resolve('404')  
-      		} else { // Outro erro
+      		} else {
                 console.error('Unexpected error from Shazam API')
-                //console.log(response)
-                resolve('404')  // 404 pois não há outra msg a mandar ao usuario
+                resolve('599') // Outro erro
       		} 
       	})
       	.catch(error=>{
             console.error('API Key failed:')
       		if (error.response && error.response.data) {
-                const msg = error.response.data.message;
+                const msg = error.response.data.message || JSON.stringify(error.response.data);
                 console.error(msg);
       			if (msg && msg.includes('this API') || msg.includes('limit'))
                     resolve('405'); // Limite da API alcançado
