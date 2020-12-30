@@ -26,8 +26,9 @@ main = async () => {
         console.log(res ? 'Song Identified: ' + res : 'No songs matching were found.');
 
         // Check for wrong song names
-        if (res && process.env.wrongsongs && process.env.wrongsongs[res])
-            res = process.env.wrongsongs[res];
+        let wrongsongs = JSON.parse(process.env.wrongsongs);
+        if (res && wrongsongs && wrongsongs[res])
+            res = wrongsongs[res];
 
         // Youtube Card
         const card = res ? await youtubeCard(res) : false;

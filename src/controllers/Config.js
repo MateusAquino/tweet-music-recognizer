@@ -44,7 +44,7 @@ class Config {
     static parseKeys(keyName, config) {
         let api;
         if (api = Config.apis[keyName]) {
-            const parsed = config[keyName].split('\n').map(e=>e.split(/, */))
+            const parsed = config[keyName].split('\n').map(e=>e.split(/ *, */))
             let key = 0;
             for (key in parsed)
                 if (parseInt(parsed[key][api[0]]) < api[1]) {
@@ -56,6 +56,9 @@ class Config {
                     break;
                 } else if (key-1===parsed.length) return false;
             return parsed[key];
+        } else if (keyName.trim()==='youtube_access_token') {
+            let keysArray = config[keyName].split(/' *, *'/);
+            return keysArray[Math.floor(Math.random() * keysArray.length)];
         } else
             return config[keyName];
     }
