@@ -57,7 +57,7 @@ class Config {
                 } else if (key-1===parsed.length) return false;
             return parsed[key];
         } else if (keyName.trim()==='youtube_access_token') {
-            let keysArray = config[keyName].split(/' *, *'/);
+            let keysArray = config[keyName].split(/ *, */);
             return keysArray[Math.floor(Math.random() * keysArray.length)];
         } else
             return config[keyName];
