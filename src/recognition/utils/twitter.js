@@ -122,8 +122,11 @@ class Twitter {
         if (tweet.extended_entities.media[0].video_info === undefined) return false; // Tweet sem video
         const mediaURL = tweet.extended_entities.media[0].video_info.variants[0].url;
             for (let media of tweet.extended_entities.media[0].video_info.variants)
-                if (media.content_type === 'video/mp4')
+                if (media.content_type === 'video/mp4') {
+                    console.log('x - '+media.url)
                     return media.url;
+                }
+        console.log('y - '+mediaURL)
         return mediaURL;
     }
 
