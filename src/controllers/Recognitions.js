@@ -1,4 +1,4 @@
-const statusHashRgx = /video\/([^\/]+)(?:\/[^\/]+){3}\/([^\/?]+)/;
+const statusHashRgx = /video\/([^\/]+)(?:\/[^\/]+){2,3}\/([^\/?]+)/;
 const Recognitions = require('../models/Recognitions');
 
 class RecognitionsController {

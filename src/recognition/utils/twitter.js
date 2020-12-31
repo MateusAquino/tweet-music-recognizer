@@ -123,10 +123,12 @@ class Twitter {
         const mediaURL = tweet.extended_entities.media[0].video_info.variants[0].url;
             for (let media of tweet.extended_entities.media[0].video_info.variants)
                 if (media.content_type === 'video/mp4') {
-                    console.log('x - '+media.url)
+                    console.log('------ New Identification in progress... (twid: '+id+') ------');
+                    console.log('Media URL: ' + media.url)
                     return media.url;
                 }
-        console.log('y - '+mediaURL)
+        console.log('------ New Identification in progress... (twid: '+id+') ------');
+        console.log('Media URL (fallback): ' + mediaURL)
         return mediaURL;
     }
 

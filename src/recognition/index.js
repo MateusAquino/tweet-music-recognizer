@@ -16,7 +16,6 @@ main = async () => {
             return twitter.replyTo(id, screenName, `twitter.com/me/status/${setRecognized}`);
 
         // Download Media
-        console.log('------ New Identification in progress... (twid: ' + tweet.id_str + ') ------')
         let tempFile = await download(mediaURL);
         if (tempFile === false) return console.log('Couldn\'t download media');
 
