@@ -5,7 +5,7 @@
   "main": "app.js",
   "dependencies": {
     "acrcloud": "^1.4.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "dotenv": "^8.2.0",
     "ejs": "^3.1.5",
     "express": "^4.17.1",
