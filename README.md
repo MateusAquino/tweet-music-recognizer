@@ -32,7 +32,7 @@ npm start
 **Note:** Anti-spam response messages are hardcoded inside `recognition/utils/prettyMessage.js`.
 
 ## ⚙️ Control Panel
-All your tokens (gathered in [Setup](https://github.com/MateusAquino/tweet-music-recognizer#-setup)) should be set in this step.  
+All your tokens (gathered in [Setup](https://github.com/MateusAquino/tweet-music-recognizer#-setup)) should be set at this step.  
 Access the `/adm` endpoint passing your `backendpass` (from `.env`) like this:  
 
 ```
