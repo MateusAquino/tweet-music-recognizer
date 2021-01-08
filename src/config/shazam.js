@@ -56,7 +56,7 @@ class Shazam {
 				resolve('599') // Outro erro
 	  		} 
 	  	})
-	  	.catch(error=>{
+	  	.catch(async error => {
 			console.error('API Key failed:')
 			if (error.response && error.response.data) {
 				const msg = error.response.data.message || JSON.stringify(error.response.data);
