@@ -1,6 +1,9 @@
 identifyTempMp4ACR = async tempFile => {
     const acr = await require('../../config/acr').load();
-    if (!acr) {console.error('Warning: ACR API Limit reached!'); return false};
+    if (!acr) {
+        console.error('Warning: ACR API Limit reached!'); 
+        return '405';
+    }
     try {
         const metadata = await acr.identify(tempFile.sample);
 
@@ -15,7 +18,7 @@ identifyTempMp4ACR = async tempFile => {
         songName = (songName ? songName.slice(0, -2).replace(';', ', ') : 'Artista Desconhecido') + ' - ' + song[0].title;
         return songName;
     } catch (err) {
-        console.error('Unexpected error from Shazam API');
+        console.error('Unexpected error from ACR API');
         console.error(err)
         return false;
     }

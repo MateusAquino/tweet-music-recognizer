@@ -21,6 +21,7 @@ main = async () => {
 
         // Identify song
         let res = await identifyACR(tempFile);
+        if (res==='405') return await twitter.replyTo(id, screenName, prettyMessage(res));
         res = res ? res : await identifyShazam(tempFile);
         console.log(res ? 'Song Identified: ' + res : 'No songs matching were found.');
 

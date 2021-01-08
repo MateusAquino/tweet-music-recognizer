@@ -1,7 +1,11 @@
 var pick = array => array[Math.floor(Math.random() * array.length)];
 
 const prettyMessage = result => {
-    if (result)
+    if (result==='405')
+        return pick(['Acabaram os usos diários, sinto muito tente novamente amanha :c',
+                     'Sinto muito, acabaram os usos diários... tente novamente amanha :c',
+                     'Me usaram de mais hoje 😖 tente me marcar novamente amanha :c']);
+    else if (result)
         return pick(['Ta na mão $resultado',
                      'Creio que seja $resultado',
                      'Fontes me dizem q seja $resultado',
