@@ -69,7 +69,7 @@ class Shazam {
 						// Mover ratelimit'ed key pro final da lista
 						config.rapidapi_shazam_key.split('\n').forEach(key => {
 							if (parseInt(key.split(/, */)[1])!==500) {
-								if (first) first = key
+								if (!first) first = key
 								else keyArray.push(key)
 							}
 						})
