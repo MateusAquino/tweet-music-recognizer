@@ -71,7 +71,8 @@ class Shazam {
 							if (parseInt(key.split(/, */)[1])!==500) {
 								if (!first) first = key
 								else keyArray.push(key)
-							}
+							} else 
+								keyArray.push(key)
 						})
 						keyArray.push(first);
 						config.rapidapi_shazam_key = keyArray.join('\n');
