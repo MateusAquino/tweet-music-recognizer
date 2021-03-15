@@ -38,9 +38,6 @@ main = async () => {
         if (res && card) message += `${prettyMessage(res)} ${card}`;
         else if (res) message += `Não encontrei o vídeo mas o nome da música talvez seja '${res}'.`;
         else message += `${prettyMessage(res)}`;
-        
-        // Twitter's autoban hotfix
-        message = message.replace(/memphis/ig, '[censurado]')
 
         // Reply & Add to already recognized list
         const reply = await twitter.replyTo(id, screenName, message);
